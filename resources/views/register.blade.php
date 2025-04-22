@@ -2,10 +2,6 @@
 
 @section('title', 'Inscreva-se')
 
-@php
-    dd(env('API_USERNAME'), env('API_TOKEN'));
-@endphp
-
 @section('content')
 
     @include('partials.painel')
@@ -303,9 +299,9 @@
     </script>
 
     @php
-        $apiUrl = env('API_URL');
-        $userName = env('API_USERNAME');
-        $token = env('API_TOKEN');
+        $apiUrl = config('api.url');
+        $userName = config('api.username');
+        $token = config('api.token');
     @endphp
 
     {{-- {{ dd($apiUrl) }} --}}
