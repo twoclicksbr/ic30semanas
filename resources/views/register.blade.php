@@ -304,7 +304,7 @@
         $token = env('API_TOKEN');
     @endphp
 
-    {{ dd($apiUrl) }}
+    {{-- {{ dd($apiUrl) }} --}}
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
