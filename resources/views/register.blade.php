@@ -230,7 +230,7 @@
                 }
             };
 
-            fetch("{{ $apiUrl }}/participant", {
+            fetch("/proxy/participant", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -310,14 +310,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             const selectTypeGender = document.getElementById("id_type_gender");
 
-            fetch("{{ $apiUrl }}/admin/type-gender?sort_by=id&sort_order=asc", {
-                    headers: {
-                        "Accept": "application/json",
-                        "username": "{{ $userName }}",
-                        "token": "{{ $token }}",
-                        "idPerson": 1
-                    }
-                })
+            fetch("/proxy/type-gender")
                 .then(res => res.json())
                 .then(data => {
 
@@ -344,14 +337,7 @@
         document.addEventListener("DOMContentLoaded", function() {
             const selectTypeGroup = document.getElementById("id_type_group");
 
-            fetch("{{ $apiUrl }}/admin/type-group/?sort_order=asc", {
-                    headers: {
-                        "Accept": "application/json",
-                        "username": "{{ $userName }}",
-                        "token": "{{ $token }}",
-                        "idPerson": 1
-                    }
-                })
+            fetch("/proxy/type-group")
                 .then(res => res.json())
                 .then(data => {
                     selectTypeGroup.innerHTML = '<option value="">Selecione o Grupo</option>';
