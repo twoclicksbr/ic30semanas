@@ -2,6 +2,10 @@
 
 @section('title', 'Inscreva-se')
 
+@php
+    dd(env('API_USERNAME'), env('API_TOKEN'));
+@endphp
+
 @section('content')
 
     @include('partials.painel')
