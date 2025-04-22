@@ -462,6 +462,115 @@
     </script>
 
 
+    <script>
+        // ✅ Validação CPF no blur
+        document.getElementById("cpf").addEventListener("blur", function() {
+            const cpf = this.value.replace(/\D/g, '');
+            if (cpf.length < 11) return;
+
+            fetch("/check-cpf", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        cpf
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status && data.result?.data?.length > 0) {
+                        showErrors({
+                            cpf: ["CPF já está cadastrado."]
+                        });
+                        this.classList.add("is-invalid");
+                    } else {
+                        this.classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                });
+        });
+
+        // ✅ Validação E-mail no blur
+        document.getElementById("email_user").addEventListener("blur", function() {
+            const email = this.value.trim();
+            if (email.length < 5) return;
+
+            fetch("/check-email", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        email
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status && data.result?.data?.length > 0) {
+                        showErrors({
+                            email: ["E-mail já está cadastrado."]
+                        });
+                        this.classList.add("is-invalid");
+                    } else {
+                        this.classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                });
+        });
+
+        // ✅ Validação Eklesia no blur (se grupo = 1)
+        document.getElementById("eklesia").addEventListener("blur", function() {
+            const eklesia = this.value.trim();
+            const idGroup = document.getElementById("id_type_group").value;
+            if (idGroup !== "1" || !eklesia) return;
+
+            fetch("/check-eklesia", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            "content")
+                    },
+                    body: JSON.stringify({
+                        eklesia
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.result?.data?.length > 0) {
+                        showErrors({
+                            eklesia: ["Este código Eklesia já está cadastrado."]
+                        });
+                        this.classList.add("is-invalid");
+                    } else {
+                        this.classList.remove("is-invalid");
+                        document.getElementById("formErrors").classList.add("d-none");
+                    }
+                });
+        });
+
+        // ✅ Validação de senha no blur
+        document.getElementById("password").addEventListener("blur", function() {
+            const password = this.value.trim();
+            if (password.length < 6) {
+                showErrors({
+                    password: ["A senha deve ter no mínimo 6 caracteres."]
+                });
+                this.classList.add("is-invalid");
+            } else {
+                this.classList.remove("is-invalid");
+                document.getElementById("formErrors").classList.add("d-none");
+            }
+        });
+    </script>
+
+
+
     <style>
         .step {
             display: none;
