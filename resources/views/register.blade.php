@@ -298,6 +298,14 @@
         });
     </script>
 
+    @php
+        $apiUrl = env('API_URL');
+        $userName = env('API_USERNAME');
+        $token = env('API_TOKEN');
+    @endphp
+
+    {{ dd($apiUrl) }}
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const selectTypeGender = document.getElementById("id_type_gender");
