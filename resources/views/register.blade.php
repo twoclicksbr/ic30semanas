@@ -204,21 +204,99 @@
             document.getElementById("step" + (step - 1)).classList.add("active");
             currentStep--;
         }
+    </script>
 
-        document.getElementById("multiStepForm").addEventListener("submit", function(e) {
+    <script>
+        document.getElementById("multiStepForm").addEventListener("submit", async function(e) {
             e.preventDefault();
 
+            const idGroup = document.getElementById("id_type_group").value;
+            const eklesia = document.getElementById("eklesia").value.trim();
+            const cpf = document.getElementById("cpf").value.replace(/\D/g, '');
+            const email = document.getElementById("email_user").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            let formValid = true;
+            const errors = {};
+
+            // CPF duplicado
+            const resCpf = await fetch("/check-cpf", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').getAttribute(
+                        "content")
+                },
+                body: JSON.stringify({
+                    cpf
+                })
+            }).then(res => res.json());
+
+            if (resCpf.status && resCpf.result?.data?.length > 0) {
+                errors.cpf = ["CPF já está cadastrado."];
+                formValid = false;
+            }
+
+            // E-mail duplicado
+            const resEmail = await fetch("/check-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').getAttribute(
+                        "content")
+                },
+                body: JSON.stringify({
+                    email
+                })
+            }).then(res => res.json());
+
+            if (resEmail.status && resEmail.result?.data?.length > 0) {
+                errors.email = ["E-mail já está cadastrado."];
+                formValid = false;
+            }
+
+            // Eklesia duplicado (somente se grupo = 1)
+            if (idGroup === "1" && eklesia !== "") {
+                const resEklesia = await fetch("/check-eklesia", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]')
+                            .getAttribute("content")
+                    },
+                    body: JSON.stringify({
+                        eklesia
+                    })
+                }).then(res => res.json());
+
+                if (resEklesia.result?.data?.length > 0) {
+                    errors.eklesia = ["Este código Eklesia já está cadastrado."];
+                    formValid = false;
+                }
+            }
+
+            // Senha curta
+            if (password.length < 6) {
+                errors.password = ["A senha deve ter no mínimo 6 caracteres."];
+                formValid = false;
+            }
+
+            if (!formValid) {
+                showErrors(errors);
+                return;
+            }
+
+            // Preparar dados e enviar
             const jsonData = {
                 name: document.getElementById("name").value,
-                cpf: document.getElementById("cpf").value,
+                cpf,
                 id_type_gender: document.getElementById("id_type_gender").value,
-                id_type_group: document.getElementById("id_type_group").value,
+                id_type_group: idGroup,
                 birthdate: document.getElementById("dt_nascimento").value,
                 whatsapp: document.getElementById("whatsapp").value,
-                eklesia: document.getElementById("eklesia").value,
-                id_church: 1,
-                email: document.getElementById("email_user").value,
-                password: document.getElementById("password").value,
+                eklesia: eklesia,
+                email,
+                password,
                 address: {
                     cep: document.getElementById("cep").value,
                     logradouro: document.getElementById("logradouro").value,
@@ -230,43 +308,38 @@
                 }
             };
 
-            fetch("/proxy/participant", {
+            fetch("/cadastro/salvar", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json",
-                        "username": "{{ $userName }}",
-                        "token": "{{ $token }}",
-                        "id-person": sessionStorage.getItem("auth_id_person")
+                        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').getAttribute(
+                            "content")
                     },
                     body: JSON.stringify(jsonData)
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.error) {
-                        // alert("Erro: " + JSON.stringify(data.messages || data.message));
-
-                        if (data.error && data.messages) {
-                            showErrors(data.messages);
-                        } else if (data.error && data.message) {
-                            showErrors({
-                                geral: [data.message]
-                            });
-                        }
+                    if (data.error && data.messages) {
+                        showErrors(data.messages);
+                    } else if (data.error && data.message) {
+                        showErrors({
+                            geral: [data.message]
+                        });
                     } else if (data.redirect) {
                         window.location.href = data.redirect;
                     } else {
                         alert("Cadastro realizado com sucesso!");
                         document.getElementById("multiStepForm").reset();
                     }
-
                 })
                 .catch(err => {
                     console.error("Erro:", err);
                     alert("Erro ao enviar os dados.");
                 });
         });
+    </script>
 
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             const cepInput = document.getElementById("cep");
 
@@ -373,129 +446,6 @@
                 })
                 .join('');
         }
-    </script>
-
-    <script>
-        document.getElementById("cpf").addEventListener("blur", function() {
-            const cpf = this.value.replace(/\D/g, '');
-
-            if (cpf.length < 11) return;
-
-            fetch("/check-cpf", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').getAttribute(
-                            "content")
-                    },
-                    body: JSON.stringify({
-                        cpf
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status && data.result?.data?.length > 0) {
-                        showErrors({
-                            cpf: ["CPF já está cadastrado."]
-                        });
-                        document.getElementById("cpf").classList.add("is-invalid");
-                    } else {
-                        document.getElementById("cpf").classList.remove("is-invalid");
-                        document.getElementById("formErrors").classList.add("d-none");
-                    }
-                })
-                .catch(() => {
-                    console.error("Erro ao verificar CPF");
-                });
-        });
-    </script>
-
-    <script>
-        document.getElementById("email_user").addEventListener("blur", function() {
-            const email = this.value.trim();
-
-            if (email.length < 5) return;
-
-            fetch("/check-email", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            "content")
-                    },
-                    body: JSON.stringify({
-                        email
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status && data.result?.data?.length > 0) {
-                        showErrors({
-                            email: ["E-mail já está cadastrado."]
-                        });
-                        document.getElementById("email_user").classList.add("is-invalid");
-                    } else {
-                        document.getElementById("email_user").classList.remove("is-invalid");
-                        document.getElementById("formErrors").classList.add("d-none");
-                    }
-                })
-                .catch(() => {
-                    console.error("Erro ao verificar E-mail");
-                });
-        });
-    </script>
-
-    <script>
-        document.getElementById("password").addEventListener("blur", function() {
-            const password = this.value.trim();
-            const passwordField = document.getElementById("password");
-
-            if (password.length < 6) {
-                showErrors({
-                    password: ["A senha deve ter no mínimo 6 caracteres."]
-                });
-                passwordField.classList.add("is-invalid");
-            } else {
-                passwordField.classList.remove("is-invalid");
-                document.getElementById("formErrors").classList.add("d-none");
-            }
-        });
-    </script>
-
-    <script>
-        document.getElementById("eklesia").addEventListener("blur", function() {
-            const eklesia = this.value.trim();
-            const eklesiaField = document.getElementById("eklesia");
-
-            if (!eklesia) return;
-
-            fetch("/check-eklesia", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            "content")
-                    },
-                    body: JSON.stringify({
-                        eklesia
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.result && data.result.data && data.result.data.length > 0) {
-                        showErrors({
-                            eklesia: ["Este código Eklesia já está cadastrado."]
-                        });
-                        eklesiaField.classList.add("is-invalid");
-                    } else {
-                        eklesiaField.classList.remove("is-invalid");
-                        document.getElementById("formErrors").classList.add("d-none");
-                    }
-                })
-                .catch(() => {
-                    console.error("Erro ao verificar Eklesia");
-                });
-        });
     </script>
 
     <script>

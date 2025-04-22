@@ -34,14 +34,5 @@ class ProxyController extends Controller
         return response()->json($response->json());
     }
 
-    public function participant(Request $request)
-    {
-        $response = Http::withHeaders([
-            'username' => config('api.username'),
-            'token' => config('api.token'),
-            'id-person' => $request->header('id-person'),
-        ])->post(config('api.url') . '/participant', $request->all());
-
-        return response()->json($response->json(), $response->status());
-    }
+    
 }

@@ -12,16 +12,8 @@ Route::get('/', function () {
 });
 
 Route::get('/cadastro', function () {
-    return view('register', [
-        'apiUrl' => env('API_URL'), 
-        'userName' => env('API_USERNAME'),
-        'token' => env('API_TOKEN'),
-    ]);
+    return view('register');
 });
-
-
-
-
 
 Route::get('/proxy/type-gender', [ProxyController::class, 'typeGender']);
 Route::get('/proxy/type-group', [ProxyController::class, 'typeGroup']);
